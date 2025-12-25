@@ -1,6 +1,8 @@
 import Fastify from "fastify";
 import { clerkPlugin, getAuth } from "@clerk/fastify";
 import { shouldBeUser } from "./middleware/authMiddleware.js";
+import { connectOrderDb } from "@repo/order-db";
+import { orderRoute } from "./routes/order.js";
 
 const fastify = Fastify();
 
@@ -14,15 +16,18 @@ fastify.get("/health", (request, reply) => {
   });
 });
 
-fastify.get("/test", { preHandler: shouldBeUser }, (req, reply) => {
+fastify.get("/test", (req, reply) => {
   return reply.send({
     message: "User retrieved successfully",
     userId: req.userId,
   });
 });
 
+fastify.register(orderRoute);
+
 const start = async () => {
   try {
+    await connectOrderDb();
     await fastify.listen({ port: 8001 });
     console.log("Order service server is running on Port 8001");
   } catch (error) {
